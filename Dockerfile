@@ -1,4 +1,4 @@
-FROM golang:1.21.5 as backend
+FROM 1.21.5-alpine3.19 as backend
 
 WORKDIR /port-manager
 
