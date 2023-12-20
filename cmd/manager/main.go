@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/eclipse-iofog/port-manager/v3/internal/manager"
+	"github.com/datasance/port-manager/v3/internal/manager"
 )
 
 var log = zap.New()

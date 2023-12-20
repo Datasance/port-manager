@@ -2,7 +2,7 @@ SHELL = /bin/bash
 OS = $(shell uname -s)
 
 # Project variables
-PACKAGE = github.com/eclipse-iofog/port-manager/v3
+PACKAGE = github.com/datasance/port-manager/v3
 BINARY_NAME = port-manager
 IMAGE = iofog/port-manager
 
@@ -54,7 +54,7 @@ vendor: modules # Vendor all deps
 
 .PHONY: build-img
 build-img:
-	docker build -t eclipse-iofog/port-manager:latest -f build/Dockerfile .
+	docker build -t ghcri.io/datasance/port-manager:latest -f build/Dockerfile .
 
 golangci-lint: ## Install golangci
 ifeq (, $(shell which golangci-lint))

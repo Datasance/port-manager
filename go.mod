@@ -1,4 +1,4 @@
-module github.com/eclipse-iofog/port-manager/v3
+module github.com/datasance/port-manager/v3
 
 go 1.17
 
