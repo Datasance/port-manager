@@ -45,7 +45,7 @@ modules: get ## Get modules
 .PHONY: get
 get: ## Pull modules
 	@for module in $(GO_SDK_MODULE); do \
-		go get github.com/eclipse-iofog/$$module; \
+		go get github.com/datasance/$$module; \
 	done
 
 .PHONY: vendor
