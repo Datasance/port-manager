@@ -28,8 +28,8 @@ import (
 	"k8s.io/client-go/rest"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	ioclient "github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/client"
-	waitclient "github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/k8s"
+	ioclient "github.com/datasance/iofog-go-sdk/v3/pkg/client"
+	waitclient "github.com/datasance/iofog-go-sdk/v3/pkg/k8s"
 
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"

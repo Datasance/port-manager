@@ -3,7 +3,7 @@ module github.com/datasance/port-manager/v3
 go 1.17
 
 require (
-	github.com/eclipse-iofog/iofog-go-sdk/v3 v3.0.0
+	github.com/datasance/iofog-go-sdk/v3 v3.4.0
 	github.com/go-logr/logr v1.2.3
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0

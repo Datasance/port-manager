@@ -4,7 +4,7 @@ OS = $(shell uname -s)
 # Project variables
 PACKAGE = github.com/datasance/port-manager/v3
 BINARY_NAME = port-manager
-IMAGE = iofog/port-manager
+IMAGE = ghcr.io/datasance/port-manager
 
 # Build variables
 BUILD_DIR ?= bin
@@ -16,7 +16,7 @@ endif
 
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-GO_SDK_MODULE = iofog-go-sdk/v3@v3.0.0
+GO_SDK_MODULE = iofog-go-sdk/v3@v3.4.0
 
 .PHONY: clean
 clean: ## Clean the working area and the project
