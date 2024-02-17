@@ -4,7 +4,7 @@ OS = $(shell uname -s)
 # Project variables
 PACKAGE = github.com/datasance/port-manager/v3
 BINARY_NAME = port-manager
-IMAGE = iofog/port-manager
+IMAGE = ghcr.io/datasance/port-manager
 
 # Build variables
 BUILD_DIR ?= bin
