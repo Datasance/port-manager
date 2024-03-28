@@ -156,7 +156,7 @@ func (mgr *Manager) init() (err error) {
 	return nil
 }
 
-// Main loop of manager
+// Main loop of managerinit
 // Query ioFog Controller REST API and compare against cache
 // Make updates to K8s resources as required
 func (mgr *Manager) Run() {
@@ -171,6 +171,11 @@ func (mgr *Manager) Run() {
 		time.Sleep(pkg.pollInterval)
 		if err := mgr.run(); err != nil {
 			mgr.log.Error(err, "Failed in watch loop")
+			if mgr.ioClient, err = ioclient.NewAndLogin(ioclient.Options{BaseURL: baseURL}, mgr.opt.UserEmail, mgr.opt.UserPass); err != nil {
+				return
+			}
+			mgr.log.Info("Logged into Controller API")
+
 		}
 	}
 }
