@@ -171,6 +171,8 @@ func (mgr *Manager) Run() {
 		time.Sleep(pkg.pollInterval)
 		if err := mgr.run(); err != nil {
 			mgr.log.Error(err, "Failed in watch loop")
+			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
+			baseURL, err := url.Parse(baseURLStr)
 			if mgr.ioClient, err = ioclient.NewAndLogin(ioclient.Options{BaseURL: baseURL}, mgr.opt.UserEmail, mgr.opt.UserPass); err != nil {
 				return
 			}
