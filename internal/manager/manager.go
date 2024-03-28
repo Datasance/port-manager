@@ -165,19 +165,26 @@ func (mgr *Manager) Run() {
 		mgr.log.Error(err, "Failed to generate cache")
 		time.Sleep(5 * time.Second)
 	}
-
+	
 	// Watch Controller API
 	for {
 		time.Sleep(pkg.pollInterval)
 		if err := mgr.run(); err != nil {
 			mgr.log.Error(err, "Failed in watch loop")
+			
+			// Construct base URL
 			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
-			baseURL, err := url.Parse(baseURLStr)
+			baseURL, parseErr := url.Parse(baseURLStr)
+			if parseErr != nil {
+				mgr.log.Error(parseErr, "Failed to parse base URL")
+				continue // Continue the loop if baseURL parsing fails
+			}
+			
+			// Initialize ioClient with new base URL
 			if mgr.ioClient, err = ioclient.NewAndLogin(ioclient.Options{BaseURL: baseURL}, mgr.opt.UserEmail, mgr.opt.UserPass); err != nil {
-				return
+				return // Exiting the loop/function if login fails
 			}
 			mgr.log.Info("Logged into Controller API")
-
 		}
 	}
 }
