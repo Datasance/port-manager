@@ -326,6 +326,7 @@ type ControllerStatus struct {
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Totp     string `json:"totp"`
 }
 
 type UpdateUserPasswordRequest struct {

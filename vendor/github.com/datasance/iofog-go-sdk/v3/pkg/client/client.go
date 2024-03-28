@@ -167,9 +167,9 @@ func (clt *Client) doRequestWithHeaders(method, requestPath string, request inte
 	default:
 		return nil, fmt.Errorf("failed to parse request URL %s", requestPath)
 	}
-
+	
 	// Set auth header
-	headers["Authorization"] = clt.accessToken
+	headers["Authorization"] = "Bearer " + clt.accessToken
 
 	currentRetries := Retries{CustomMessage: make(map[string]int)}
 	if clt.retries.CustomMessage != nil {
