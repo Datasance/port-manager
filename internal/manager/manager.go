@@ -67,10 +67,6 @@ type Options struct {
 func New(opt *Options) (*Manager, error) {
 	logf.SetLogger(zap.New())
 
-	password, err := decodeBase64(opt.UserPass)
-	if err == nil {
-		opt.UserPass = password
-	}
 	mgr := &Manager{
 		cache:       make(portMap),
 		log:         logf.Log.WithName(opt.ProxyName),
@@ -161,9 +157,9 @@ func (mgr *Manager) init() (err error) {
 	}
 
 	// Assign access token
-	if mgr.ioClient, err = ioclient.SetAccessToken(response.AccessToken); err != nil {
-		return
-	}
+	ioclient.SetAccessToken(response.AccessToken)
+	return nil
+
 	mgr.log.Info("Logged into Controller API")
 
 	// Start address register routine
@@ -237,9 +233,8 @@ func (mgr *Manager) Run() {
 			}
 
 			// Assign access token
-			if mgr.ioClient, err = ioclient.SetAccessToken(response.AccessToken); err != nil {
-				return
-			}
+			ioclient.SetAccessToken(response.AccessToken)
+			return nil
 
 			mgr.log.Info("Logged into Controller API")
 		}
