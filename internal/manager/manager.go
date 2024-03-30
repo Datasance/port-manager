@@ -49,8 +49,10 @@ type Manager struct {
 
 type Options struct {
 	Namespace            string
-	UserEmail            string
-	UserPass             string
+	AuthURL				 string
+	Realm				 string
+	ClientId			 string
+	ClientSecret		 string
 	ProxyImage           string
 	ProxyName            string
 	ProxyServiceType     string
@@ -124,12 +126,40 @@ func (mgr *Manager) init() (err error) {
 			"credential": 10,
 		},
 	})
-	baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
-	baseURL, err := url.Parse(baseURLStr)
-	if err != nil {
-		return fmt.Errorf("could not parse Controller URL %s: %s", baseURLStr, err.Error())
+	// Construct the URL for token request
+	url := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", mgr.opt.AuthURL, mgr.opt.Realm)
+	method := "POST"
+	payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", mgr.opt.ClientId, mgr.opt.ClientSecret)
+
+	// Create HTTP client with custom transport to skip certificate verification
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	if mgr.ioClient, err = ioclient.NewAndLogin(ioclient.Options{BaseURL: baseURL}, mgr.opt.UserEmail, mgr.opt.UserPass); err != nil {
+	client := &http.Client{Transport: tr}
+
+	// Create request
+	req, err := http.NewRequest(method, url, strings.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// Send request
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	// Read response body
+	var response ioclient.LoginResponse
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return err
+	}
+
+	// Assign access token
+	if mgr.ioClient, err = ioclient.SetAccessToken(response.AccessToken); err != nil {
 		return
 	}
 	mgr.log.Info("Logged into Controller API")
@@ -172,18 +202,43 @@ func (mgr *Manager) Run() {
 		if err := mgr.run(); err != nil {
 			mgr.log.Error(err, "Failed in watch loop")
 
-			// Construct base URL
-			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
-			baseURL, parseErr := url.Parse(baseURLStr)
-			if parseErr != nil {
-				mgr.log.Error(parseErr, "Failed to parse base URL")
-				continue // Continue the loop if baseURL parsing fails
+			// Construct the URL for token request
+			url := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", mgr.opt.AuthURL, mgr.opt.Realm)
+			method := "POST"
+			payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", mgr.opt.ClientId, mgr.opt.ClientSecret)
+
+			// Create HTTP client with custom transport to skip certificate verification
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			client := &http.Client{Transport: tr}
+
+			// Create request
+			req, err := http.NewRequest(method, url, strings.NewReader(payload))
+			if err != nil {
+				return err
+			}
+			req.Header.Add("Cache-Control", "no-cache")
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+			// Send request
+			res, err := client.Do(req)
+			if err != nil {
+				return err
+			}
+			defer res.Body.Close()
+
+			// Read response body
+			var response ioclient.LoginResponse
+			if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+				return err
 			}
 
-			// Initialize ioClient with new base URL
-			if mgr.ioClient, err = ioclient.NewAndLogin(ioclient.Options{BaseURL: baseURL}, mgr.opt.UserEmail, mgr.opt.UserPass); err != nil {
-				return // Exiting the loop/function if login fails
+			// Assign access token
+			if mgr.ioClient, err = ioclient.SetAccessToken(response.AccessToken); err != nil {
+				return
 			}
+
 			mgr.log.Info("Logged into Controller API")
 		}
 	}

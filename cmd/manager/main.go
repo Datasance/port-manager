@@ -14,8 +14,10 @@ import (
 var log = zap.New()
 
 const (
-	userEmailEnv        = "IOFOG_USER_EMAIL"
-	userPassEnv         = "IOFOG_USER_PASS"
+	authURLEnv			= "KC_URL"
+	realmEnv			= "KC_REALM"
+	clientIdEnv 		= "KC_CLIENT"
+	clientSecretEnv     = "KC_CLIENT_SECRET"
 	proxyImageEnv       = "PROXY_IMAGE"
 	httpProxyAddressEnv = "HTTP_PROXY_ADDRESS"
 	tcpProxyAddressEnv  = "TCP_PROXY_ADDRESS"
@@ -30,8 +32,10 @@ type env struct {
 
 func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.Options) {
 	envs := map[string]env{
-		userEmailEnv:        {key: userEmailEnv},
-		userPassEnv:         {key: userPassEnv},
+		authURLEnv:			 {key: authURLEnv},
+		realmEnv:			 {key: realmEnv},
+		clientIdEnv:		 {key: clientIdEnv},
+		clientSecretEnv:     {key: clientSecretEnv},
 		routerAddressEnv:    {key: routerAddressEnv},
 		proxyImageEnv:       {key: proxyImageEnv},
 		httpProxyAddressEnv: {key: httpProxyAddressEnv, optional: true},
@@ -50,8 +54,10 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 
 	opt := manager.Options{
 		Namespace:            namespace,
-		UserEmail:            envs[userEmailEnv].value,
-		UserPass:             envs[userPassEnv].value,
+		AuthURL:			  envs[authURLEnv].value,
+		Realm:				  envs[realmEnv].value,
+		ClientId:			  envs[clientIdEnv].value,
+		ClientSecret:		  envs[clientSecretEnv].value,
 		ProxyImage:           envs[proxyImageEnv].value,
 		ProxyServiceType:     "LoadBalancer",
 		ProxyExternalAddress: "",
