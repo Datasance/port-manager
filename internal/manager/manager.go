@@ -113,7 +113,7 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 
 	// Assign access token
 	ioClient.SetAccessToken(response.AccessToken)
-	return nill
+	return nil
 	
 }
 
@@ -132,7 +132,7 @@ func New(opt *Options) (*Manager, error) {
         return nil, err
     }
 
-    if err := mgr.loginIofogClient(); err != nil {
+    if err := mgr.loginIofogClient(ioClient); err != nil {
         return nil, err
     }
 
@@ -185,8 +185,19 @@ func (mgr *Manager) init() (err error) {
 		},
 	})
 
+	baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
+	baseURL, err := url.Parse(baseURLStr)
+	if err != nil {
+		return fmt.Errorf("could not parse Controller URL %s: %s", baseURLStr, err.Error())
+	}
+
+	iofogClient := iofogclient.New(iofogclient.Options{
+		BaseURL: baseURL,
+		Timeout: 1,
+	})
+	
 	// Generate Controller Access Token
-	if err := mgr.loginIofogClient(); err != nil {
+	if err := mgr.loginIofogClient(ioClient); err != nil {
 		mgr.log.Error(err, "Failed to generate Access Token")
 	}
 
@@ -231,7 +242,7 @@ func (mgr *Manager) Run() {
             mgr.log.Error(err, "Failed in watch loop")
 
             // Generate Controller Access Token
-            if err := mgr.loginIofogClient(); err != nil {
+            if err := mgr.loginIofogClient(ioClient); err != nil {
                 mgr.log.Error(err, "Failed to generate Access Token")
             }
             mgr.log.Info("Logged into Controller API")
