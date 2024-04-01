@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"net/url"
 	"net/http"
 	"crypto/tls"
 	"encoding/json"
@@ -132,11 +133,7 @@ func New(opt *Options) (*Manager, error) {
         return nil, err
     }
 
-    if err := mgr.loginIofogClient(ioClient); err != nil {
-        return nil, err
-    }
-
-    return mgr, nil
+	return mgr, nil
 }
 
 // Query the K8s API Server for details of this pod's deployment
@@ -191,11 +188,11 @@ func (mgr *Manager) init() (err error) {
 		return fmt.Errorf("could not parse Controller URL %s: %s", baseURLStr, err.Error())
 	}
 
-	iofogClient := iofogclient.New(iofogclient.Options{
+	ioClient := ioclient.New(ioclient.Options{
 		BaseURL: baseURL,
 		Timeout: 1,
 	})
-	
+
 	// Generate Controller Access Token
 	if err := mgr.loginIofogClient(ioClient); err != nil {
 		mgr.log.Error(err, "Failed to generate Access Token")
@@ -228,7 +225,7 @@ func (mgr *Manager) init() (err error) {
 // Main loop of manager
 // Query ioFog Controller REST API and compare against cache
 // Make updates to K8s resources as required
-func (mgr *Manager) Run() {
+func (mgr *Manager) Run(ioClient *ioclient.Client) {
     // Initialize cache based on K8s API
     if err := mgr.generateCache(); err != nil {
         mgr.log.Error(err, "Failed to generate cache")
