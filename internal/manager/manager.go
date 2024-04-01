@@ -64,7 +64,7 @@ type Options struct {
 	Config               *rest.Config
 }
 
-func (mgr *Manager) loginIofogClient() error {
+func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	authURL := mgr.opt.AuthURL
 	realm := mgr.opt.Realm
 	clientId := mgr.opt.ClientId
@@ -112,7 +112,7 @@ func (mgr *Manager) loginIofogClient() error {
 	}
 
 	// Assign access token
-	iofogClient.SetAccessToken(response.AccessToken)
+	ioClient.SetAccessToken(response.AccessToken)
 	return nil
 }
 
