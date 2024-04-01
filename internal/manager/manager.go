@@ -181,7 +181,7 @@ func (mgr *Manager) init() (err error) {
 	})
 
 	// Generate Controller Access Token
-	if err := mgr.loginIofogClient(); err != nil {
+	if err := mgr.loginIofogClient(mgr.ioClient); err != nil {
 		mgr.log.Error(err, "Failed to generate Access Token")
 	}
 
@@ -226,7 +226,7 @@ func (mgr *Manager) Run() {
             mgr.log.Error(err, "Failed in watch loop")
 
             // Generate Controller Access Token
-            if err := mgr.loginIofogClient(); err != nil {
+            if err := mgr.loginIofogClient(mgr.ioClient); err != nil {
                 mgr.log.Error(err, "Failed to generate Access Token")
             }
             mgr.log.Info("Logged into Controller API")
