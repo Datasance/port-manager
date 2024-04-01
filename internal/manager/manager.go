@@ -114,6 +114,7 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 
 	// Assign access token
 	ioClient.SetAccessToken(response.AccessToken)
+	mgr.ioClient = ioClient
 	return nil
 	
 }
@@ -236,12 +237,13 @@ func (mgr *Manager) Run() {
     for {
         time.Sleep(pkg.pollInterval)
         if err := mgr.run(); err != nil {
-            mgr.log.Error(err, "Failed in watch loop")
+            mgr.log.Info(err, "Failed in watch loop")
 
 			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
 			baseURL, err := url.Parse(baseURLStr)
 			if err != nil {
-				return fmt.Errorf("could not parse Controller URL %s: %s", baseURLStr, err.Error())
+				mgr.log.Error(err, "Could not parse Controller URL")
+				return
 			}
 		
 			ioClient := ioclient.New(ioclient.Options{
