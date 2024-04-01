@@ -64,6 +64,58 @@ type Options struct {
 	Config               *rest.Config
 }
 
+func (mgr *Manager) loginIofogClient() error {
+	authURL := mgr.opt.AuthURL
+	realm := mgr.opt.Realm
+	clientId := mgr.opt.ClientId
+	clientSecret := mgr.opt.ClientSecret
+
+	type LoginResponse struct {
+		AccessToken string `json:"access_token"`
+	}
+	mgr.log.Info("Generating Client Access Token")
+	// Construct the URL for token request
+	url := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", authURL, realm)
+	method := "POST"
+	payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", clientId, clientSecret)
+
+	// Create HTTP client with custom transport to skip certificate verification
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	// Create request
+	req, err := http.NewRequest(method, url, strings.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// Send request
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	// Check response status
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	// Read response body
+	var response LoginResponse
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return err
+	}
+
+	// Assign access token
+	iofogClient.SetAccessToken(response.AccessToken)
+	return nil
+}
+
 func New(opt *Options) (*Manager, error) {
 	logf.SetLogger(zap.New())
 
@@ -74,9 +126,12 @@ func New(opt *Options) (*Manager, error) {
 		addressChan: make(chan string, 5),
 	}
 	mgr.opt.ProtocolFilter = strings.ToUpper(mgr.opt.ProtocolFilter)
-	err = mgr.init()
+    var err error
+    if err = mgr.init(); err != nil {
+        return nil, err
+    }
 
-	return mgr, err
+    return mgr, nil
 }
 
 // Query the K8s API Server for details of this pod's deployment
@@ -124,41 +179,11 @@ func (mgr *Manager) init() (err error) {
 			"credential": 10,
 		},
 	})
-	// Construct the URL for token request
-	url := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", mgr.opt.AuthURL, mgr.opt.Realm)
-	method := "POST"
-	payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", mgr.opt.ClientId, mgr.opt.ClientSecret)
 
-	// Create HTTP client with custom transport to skip certificate verification
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	// Generate Controller Access Token
+	if err := mgr.loginIofogClient(); err != nil {
+		mgr.log.Error(err, "Failed to generate Access Token")
 	}
-	client := &http.Client{Transport: tr}
-
-	// Create request
-	req, err := http.NewRequest(method, url, strings.NewReader(payload))
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Cache-Control", "no-cache")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	// Send request
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	// Read response body
-	var response ioclient.LoginResponse
-	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-		return err
-	}
-
-	// Assign access token
-	ioclient.SetAccessToken(response.AccessToken)
-	return nil
 
 	mgr.log.Info("Logged into Controller API")
 
@@ -184,61 +209,29 @@ func (mgr *Manager) init() (err error) {
 	return nil
 }
 
-// Main loop of managerinit
+// Main loop of manager
 // Query ioFog Controller REST API and compare against cache
 // Make updates to K8s resources as required
 func (mgr *Manager) Run() {
-	// Initialize cache based on K8s API
-	if err := mgr.generateCache(); err != nil {
-		mgr.log.Error(err, "Failed to generate cache")
-		time.Sleep(5 * time.Second)
-	}
+    // Initialize cache based on K8s API
+    if err := mgr.generateCache(); err != nil {
+        mgr.log.Error(err, "Failed to generate cache")
+        time.Sleep(5 * time.Second)
+    }
 
-	// Watch Controller API
-	for {
-		time.Sleep(pkg.pollInterval)
-		if err := mgr.run(); err != nil {
-			mgr.log.Error(err, "Failed in watch loop")
+    // Watch Controller API
+    for {
+        time.Sleep(pkg.pollInterval)
+        if err := mgr.run(); err != nil {
+            mgr.log.Error(err, "Failed in watch loop")
 
-			// Construct the URL for token request
-			url := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", mgr.opt.AuthURL, mgr.opt.Realm)
-			method := "POST"
-			payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", mgr.opt.ClientId, mgr.opt.ClientSecret)
-
-			// Create HTTP client with custom transport to skip certificate verification
-			tr := &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-			client := &http.Client{Transport: tr}
-
-			// Create request
-			req, err := http.NewRequest(method, url, strings.NewReader(payload))
-			if err != nil {
-				return err
-			}
-			req.Header.Add("Cache-Control", "no-cache")
-			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-			// Send request
-			res, err := client.Do(req)
-			if err != nil {
-				return err
-			}
-			defer res.Body.Close()
-
-			// Read response body
-			var response ioclient.LoginResponse
-			if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-				return err
-			}
-
-			// Assign access token
-			ioclient.SetAccessToken(response.AccessToken)
-			return nil
-
-			mgr.log.Info("Logged into Controller API")
-		}
-	}
+            // Generate Controller Access Token
+            if err := mgr.loginIofogClient(); err != nil {
+                mgr.log.Error(err, "Failed to generate Access Token")
+            }
+            mgr.log.Info("Logged into Controller API")
+        }
+    }
 }
 
 func (mgr *Manager) generateCache() error {
