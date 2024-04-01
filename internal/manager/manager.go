@@ -225,7 +225,7 @@ func (mgr *Manager) init() (err error) {
 // Main loop of manager
 // Query ioFog Controller REST API and compare against cache
 // Make updates to K8s resources as required
-func (mgr *Manager) Run(ioClient *ioclient.Client) {
+func (mgr *Manager) Run() {
     // Initialize cache based on K8s API
     if err := mgr.generateCache(); err != nil {
         mgr.log.Error(err, "Failed to generate cache")
@@ -238,11 +238,23 @@ func (mgr *Manager) Run(ioClient *ioclient.Client) {
         if err := mgr.run(); err != nil {
             mgr.log.Error(err, "Failed in watch loop")
 
-            // Generate Controller Access Token
-            if err := mgr.loginIofogClient(ioClient); err != nil {
-                mgr.log.Error(err, "Failed to generate Access Token")
-            }
-            mgr.log.Info("Logged into Controller API")
+			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
+			baseURL, err := url.Parse(baseURLStr)
+			if err != nil {
+				return fmt.Errorf("could not parse Controller URL %s: %s", baseURLStr, err.Error())
+			}
+		
+			ioClient := ioclient.New(ioclient.Options{
+				BaseURL: baseURL,
+				Timeout: 1,
+			})
+		
+			// Generate Controller Access Token
+			if err := mgr.loginIofogClient(ioClient); err != nil {
+				mgr.log.Error(err, "Failed to generate Access Token")
+			}
+		
+			mgr.log.Info("Logged into Controller API")
         }
     }
 }
