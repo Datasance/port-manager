@@ -130,7 +130,7 @@ func New(opt *Options) (*Manager, error) {
 	}
 	mgr.opt.ProtocolFilter = strings.ToUpper(mgr.opt.ProtocolFilter)
 	var err error
-	if err := mgr.init(); err != nil {
+	if err = mgr.init(); err != nil {
 		return nil, err
 	}
 
