@@ -16,7 +16,7 @@ var log = zap.New()
 const (
 	authURLEnv			= "KC_URL"
 	realmEnv			= "KC_REALM"
-	clientIdEnv 		= "KC_CLIENT"
+	clientIDEnv 		= "KC_CLIENT"
 	clientSecretEnv     = "KC_CLIENT_SECRET"
 	proxyImageEnv       = "PROXY_IMAGE"
 	httpProxyAddressEnv = "HTTP_PROXY_ADDRESS"
@@ -34,7 +34,7 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 	envs := map[string]env{
 		authURLEnv:			 {key: authURLEnv},
 		realmEnv:			 {key: realmEnv},
-		clientIdEnv:		 {key: clientIdEnv},
+		clientIDEnv:		 {key: clientIDEnv},
 		clientSecretEnv:     {key: clientSecretEnv},
 		routerAddressEnv:    {key: routerAddressEnv},
 		proxyImageEnv:       {key: proxyImageEnv},

@@ -15,14 +15,14 @@ package manager
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"strings"
-	"time"
-	"net/url"
-	"net/http"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -52,10 +52,10 @@ type Manager struct {
 
 type Options struct {
 	Namespace            string
-	AuthURL				 string
-	Realm				 string
-	ClientId			 string
-	ClientSecret		 string
+	AuthURL              string
+	Realm                string
+	clientID             string
+	ClientSecret         string
 	ProxyImage           string
 	ProxyName            string
 	ProxyServiceType     string
@@ -68,7 +68,7 @@ type Options struct {
 func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	authURL := mgr.opt.AuthURL
 	realm := mgr.opt.Realm
-	clientId := mgr.opt.ClientId
+	clientID := mgr.opt.clientID
 	clientSecret := mgr.opt.ClientSecret
 
 	type LoginResponse struct {
@@ -76,9 +76,9 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	}
 	mgr.log.Info("Generating Client Access Token")
 	// Construct the URL for token request
-	url := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", authURL, realm)
+	tokenURL := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", authURL, realm)
 	method := "POST"
-	payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", clientId, clientSecret)
+	payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", clientID, clientSecret)
 
 	// Create HTTP client with custom transport to skip certificate verification
 	tr := &http.Transport{
@@ -87,7 +87,7 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	client := &http.Client{Transport: tr}
 
 	// Create request
-	req, err := http.NewRequest(method, url, strings.NewReader(payload))
+	req, err := http.NewRequest(method, tokenURL, strings.NewReader(payload))
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	ioClient.SetAccessToken(response.AccessToken)
 	mgr.ioClient = ioClient
 	return nil
-	
+
 }
 
 func New(opt *Options) (*Manager, error) {
@@ -129,10 +129,10 @@ func New(opt *Options) (*Manager, error) {
 		addressChan: make(chan string, 5),
 	}
 	mgr.opt.ProtocolFilter = strings.ToUpper(mgr.opt.ProtocolFilter)
-    var err error
-    if err = mgr.init(); err != nil {
-        return nil, err
-    }
+	var err error
+	if err := mgr.init(); err != nil {
+		return nil, err
+	}
 
 	return mgr, nil
 }
@@ -227,17 +227,17 @@ func (mgr *Manager) init() (err error) {
 // Query ioFog Controller REST API and compare against cache
 // Make updates to K8s resources as required
 func (mgr *Manager) Run() {
-    // Initialize cache based on K8s API
-    if err := mgr.generateCache(); err != nil {
-        mgr.log.Error(err, "Failed to generate cache")
-        time.Sleep(5 * time.Second)
-    }
+	// Initialize cache based on K8s API
+	if err := mgr.generateCache(); err != nil {
+		mgr.log.Error(err, "Failed to generate cache")
+		time.Sleep(5 * time.Second)
+	}
 
-    // Watch Controller API
-    for {
-        time.Sleep(pkg.pollInterval)
-        if err := mgr.run(); err != nil {
-            mgr.log.Info(err.Error(), "Failed in watch loop")
+	// Watch Controller API
+	for {
+		time.Sleep(pkg.pollInterval)
+		if err := mgr.run(); err != nil {
+			mgr.log.Info(err.Error(), "Failed in watch loop")
 
 			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
 			baseURL, err := url.Parse(baseURLStr)
@@ -245,20 +245,20 @@ func (mgr *Manager) Run() {
 				mgr.log.Error(err, "Could not parse Controller URL")
 				return
 			}
-		
+
 			ioClient := ioclient.New(ioclient.Options{
 				BaseURL: baseURL,
 				Timeout: 1,
 			})
-		
+
 			// Generate Controller Access Token
 			if err := mgr.loginIofogClient(ioClient); err != nil {
 				mgr.log.Error(err, "Failed to generate Access Token")
 			}
-		
+
 			mgr.log.Info("Logged into Controller API")
-        }
-    }
+		}
+	}
 }
 
 func (mgr *Manager) generateCache() error {
