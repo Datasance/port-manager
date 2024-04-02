@@ -56,7 +56,7 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		Namespace:            namespace,
 		AuthURL:			  envs[authURLEnv].value,
 		Realm:				  envs[realmEnv].value,
-		ClientId:			  envs[clientIdEnv].value,
+		ClientID:			  envs[clientIDEnv].value,
 		ClientSecret:		  envs[clientSecretEnv].value,
 		ProxyImage:           envs[proxyImageEnv].value,
 		ProxyServiceType:     "LoadBalancer",
