@@ -87,10 +87,11 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	client := &http.Client{Transport: tr}
 
 	// Create request
-	req, err := http.NewRequestWithContext(method, tokenURL, strings.NewReader(payload))
+	req, err := http.NewRequest(method, tokenURL, strings.NewReader(payload))
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(context.TODO())
 	req.Header.Add("Cache-Control", "no-cache")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -128,7 +129,6 @@ func New(opt *Options) (*Manager, error) {
 		addressChan: make(chan string, 5),
 	}
 	mgr.opt.ProtocolFilter = strings.ToUpper(mgr.opt.ProtocolFilter)
-	var err error
 	if err := mgr.init(); err != nil {
 		return nil, err
 	}
