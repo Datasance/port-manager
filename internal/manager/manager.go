@@ -15,8 +15,11 @@ package manager
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -28,8 +31,8 @@ import (
 	"k8s.io/client-go/rest"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	ioclient "github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/client"
-	waitclient "github.com/eclipse-iofog/iofog-go-sdk/v3/pkg/k8s"
+	ioclient "github.com/datasance/iofog-go-sdk/v3/pkg/client"
+	waitclient "github.com/datasance/iofog-go-sdk/v3/pkg/k8s"
 
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -49,8 +52,10 @@ type Manager struct {
 
 type Options struct {
 	Namespace            string
-	UserEmail            string
-	UserPass             string
+	AuthURL              string
+	Realm                string
+	ClientID             string
+	ClientSecret         string
 	ProxyImage           string
 	ProxyName            string
 	ProxyServiceType     string
@@ -60,13 +65,63 @@ type Options struct {
 	Config               *rest.Config
 }
 
+func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
+	authURL := mgr.opt.AuthURL
+	realm := mgr.opt.Realm
+	clientID := mgr.opt.ClientID
+	clientSecret := mgr.opt.ClientSecret
+
+	type LoginResponse struct {
+		AccessToken string `json:"access_token"`
+	}
+	mgr.log.Info("Generating Client Access Token")
+	// Construct the URL for token request
+	tokenURL := fmt.Sprintf("%srealms/%s/protocol/openid-connect/token", authURL, realm)
+	method := "POST"
+	payload := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s", clientID, clientSecret)
+
+	// Create HTTP client with custom transport to skip certificate verification
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	// Create request
+	req, err := http.NewRequest(method, tokenURL, strings.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req = req.WithContext(context.TODO())
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// Send request
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	// Check response status
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	// Read response body
+	var response LoginResponse
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		return err
+	}
+
+	// Assign access token
+	ioClient.SetAccessToken(response.AccessToken)
+	mgr.ioClient = ioClient
+	return nil
+}
+
 func New(opt *Options) (*Manager, error) {
 	logf.SetLogger(zap.New())
 
-	password, err := decodeBase64(opt.UserPass)
-	if err == nil {
-		opt.UserPass = password
-	}
 	mgr := &Manager{
 		cache:       make(portMap),
 		log:         logf.Log.WithName(opt.ProxyName),
@@ -74,9 +129,11 @@ func New(opt *Options) (*Manager, error) {
 		addressChan: make(chan string, 5),
 	}
 	mgr.opt.ProtocolFilter = strings.ToUpper(mgr.opt.ProtocolFilter)
-	err = mgr.init()
+	if err := mgr.init(); err != nil {
+		return nil, err
+	}
 
-	return mgr, err
+	return mgr, nil
 }
 
 // Query the K8s API Server for details of this pod's deployment
@@ -124,14 +181,23 @@ func (mgr *Manager) init() (err error) {
 			"credential": 10,
 		},
 	})
-	baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v3", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
+
+	baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
 	baseURL, err := url.Parse(baseURLStr)
 	if err != nil {
 		return fmt.Errorf("could not parse Controller URL %s: %s", baseURLStr, err.Error())
 	}
-	if mgr.ioClient, err = ioclient.NewAndLogin(ioclient.Options{BaseURL: baseURL}, mgr.opt.UserEmail, mgr.opt.UserPass); err != nil {
-		return
+
+	ioClient := ioclient.New(ioclient.Options{
+		BaseURL: baseURL,
+		Timeout: 1,
+	})
+
+	// Generate Controller Access Token
+	if err := mgr.loginIofogClient(ioClient); err != nil {
+		mgr.log.Error(err, "Failed to generate Access Token")
 	}
+
 	mgr.log.Info("Logged into Controller API")
 
 	// Start address register routine
@@ -170,7 +236,26 @@ func (mgr *Manager) Run() {
 	for {
 		time.Sleep(pkg.pollInterval)
 		if err := mgr.run(); err != nil {
-			mgr.log.Error(err, "Failed in watch loop")
+			mgr.log.Info(err.Error(), "Failed in watch loop")
+
+			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
+			baseURL, err := url.Parse(baseURLStr)
+			if err != nil {
+				mgr.log.Error(err, "Could not parse Controller URL")
+				return
+			}
+
+			ioClient := ioclient.New(ioclient.Options{
+				BaseURL: baseURL,
+				Timeout: 1,
+			})
+
+			// Generate Controller Access Token
+			if err := mgr.loginIofogClient(ioClient); err != nil {
+				mgr.log.Error(err, "Failed to generate Access Token")
+			}
+
+			mgr.log.Info("Logged into Controller API")
 		}
 	}
 }

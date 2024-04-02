@@ -16,7 +16,7 @@ endif
 
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-GO_SDK_MODULE = iofog-go-sdk/v3@v3.0.0
+GO_SDK_MODULE = iofog-go-sdk/v3@v3.4.0
 
 .PHONY: clean
 clean: ## Clean the working area and the project
@@ -45,7 +45,7 @@ modules: get ## Get modules
 .PHONY: get
 get: ## Pull modules
 	@for module in $(GO_SDK_MODULE); do \
-		go get github.com/eclipse-iofog/$$module; \
+		go get github.com/datasance/$$module; \
 	done
 
 .PHONY: vendor
