@@ -54,7 +54,7 @@ type Options struct {
 	Namespace            string
 	AuthURL              string
 	Realm                string
-	clientID             string
+	ClientID             string
 	ClientSecret         string
 	ProxyImage           string
 	ProxyName            string
@@ -68,7 +68,7 @@ type Options struct {
 func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	authURL := mgr.opt.AuthURL
 	realm := mgr.opt.Realm
-	clientID := mgr.opt.clientID
+	clientID := mgr.opt.ClientID
 	clientSecret := mgr.opt.ClientSecret
 
 	type LoginResponse struct {
