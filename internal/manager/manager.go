@@ -237,7 +237,7 @@ func (mgr *Manager) Run() {
     for {
         time.Sleep(pkg.pollInterval)
         if err := mgr.run(); err != nil {
-            mgr.log.Info(err, "Failed in watch loop")
+            mgr.log.Info(err.Error(), "Failed in watch loop")
 
 			baseURLStr := fmt.Sprintf("http://%s.%s:%d/api/v1", pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
 			baseURL, err := url.Parse(baseURLStr)
