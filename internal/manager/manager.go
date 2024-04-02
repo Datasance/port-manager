@@ -87,7 +87,7 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	client := &http.Client{Transport: tr}
 
 	// Create request
-	req, err := http.NewRequest(method, tokenURL, strings.NewReader(payload))
+	req, err := http.NewRequestWithContext(method, tokenURL, strings.NewReader(payload))
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,6 @@ func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
 	ioClient.SetAccessToken(response.AccessToken)
 	mgr.ioClient = ioClient
 	return nil
-
 }
 
 func New(opt *Options) (*Manager, error) {
@@ -130,7 +129,7 @@ func New(opt *Options) (*Manager, error) {
 	}
 	mgr.opt.ProtocolFilter = strings.ToUpper(mgr.opt.ProtocolFilter)
 	var err error
-	if err = mgr.init(); err != nil {
+	if err := mgr.init(); err != nil {
 		return nil, err
 	}
 
