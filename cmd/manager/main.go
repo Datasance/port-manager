@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
 	"encoding/json"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -63,23 +63,23 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		ProxyImage:              envs[proxyImageEnv].value,
 		ProxyServiceType:        "LoadBalancer",
 		ProxyServiceAnnotations: make(map[string]string),
-		ProxyExternalAddress: "",
-		ProtocolFilter:       "",
-		ProxyName:            "http-proxy", // TODO: Fix this default, e.g. iofogctl tests get svc name
-		RouterAddress:        envs[routerAddressEnv].value,
-		Config:               cfg,
+		ProxyExternalAddress:    "",
+		ProtocolFilter:          "",
+		ProxyName:               "http-proxy", // TODO: Fix this default, e.g. iofogctl tests get svc name
+		RouterAddress:           envs[routerAddressEnv].value,
+		Config:                  cfg,
 	}
-	
-    // Set proxyServiceAnnotations if present
-    if annotations := envs[proxyServiceAnnotationsEnv].value; annotations != "" {
-        var annotationsMap map[string]string
-        err := json.Unmarshal([]byte(annotations), &annotationsMap)
-        if err != nil {
-            log.Error(err, "Failed to unmarshal proxy service annotations")
-            os.Exit(1)
-        }
-        opt.ProxyServiceAnnotations = annotationsMap
-    }
+
+	// Set proxyServiceAnnotations if present
+	if annotations := envs[proxyServiceAnnotationsEnv].value; annotations != "" {
+		var annotationsMap map[string]string
+		err := json.Unmarshal([]byte(annotations), &annotationsMap)
+		if err != nil {
+			log.Error(err, "Failed to unmarshal proxy service annotations")
+			os.Exit(1)
+		}
+		opt.ProxyServiceAnnotations = annotationsMap
+	}
 
 	opts = append(opts, opt)
 	if envs[httpProxyAddressEnv].value != "" && envs[tcpProxyAddressEnv].value != "" {
