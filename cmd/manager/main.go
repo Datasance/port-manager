@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-
+	"encoding/json"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -14,14 +14,15 @@ import (
 var log = zap.New()
 
 const (
-	authURLEnv          = "KC_URL"
-	realmEnv            = "KC_REALM"
-	clientIDEnv         = "KC_CLIENT"
-	clientSecretEnv     = "KC_CLIENT_SECRET"
-	proxyImageEnv       = "PROXY_IMAGE"
-	httpProxyAddressEnv = "HTTP_PROXY_ADDRESS"
-	tcpProxyAddressEnv  = "TCP_PROXY_ADDRESS"
-	routerAddressEnv    = "ROUTER_ADDRESS"
+	authURLEnv                 = "KC_URL"
+	realmEnv                   = "KC_REALM"
+	clientIDEnv                = "KC_CLIENT"
+	clientSecretEnv            = "KC_CLIENT_SECRET"
+	proxyImageEnv              = "PROXY_IMAGE"
+	httpProxyAddressEnv        = "HTTP_PROXY_ADDRESS"
+	tcpProxyAddressEnv         = "TCP_PROXY_ADDRESS"
+	routerAddressEnv           = "ROUTER_ADDRESS"
+	proxyServiceAnnotationsEnv = "PROXY_SERVICE_ANNOTATIONS"
 )
 
 type env struct {
@@ -32,14 +33,15 @@ type env struct {
 
 func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.Options) {
 	envs := map[string]env{
-		authURLEnv:          {key: authURLEnv},
-		realmEnv:            {key: realmEnv},
-		clientIDEnv:         {key: clientIDEnv},
-		clientSecretEnv:     {key: clientSecretEnv},
-		routerAddressEnv:    {key: routerAddressEnv},
-		proxyImageEnv:       {key: proxyImageEnv},
-		httpProxyAddressEnv: {key: httpProxyAddressEnv, optional: true},
-		tcpProxyAddressEnv:  {key: tcpProxyAddressEnv, optional: true},
+		authURLEnv:                 {key: authURLEnv},
+		realmEnv:                   {key: realmEnv},
+		clientIDEnv:                {key: clientIDEnv},
+		clientSecretEnv:            {key: clientSecretEnv},
+		routerAddressEnv:           {key: routerAddressEnv},
+		proxyImageEnv:              {key: proxyImageEnv},
+		httpProxyAddressEnv:        {key: httpProxyAddressEnv, optional: true},
+		tcpProxyAddressEnv:         {key: tcpProxyAddressEnv, optional: true},
+		proxyServiceAnnotationsEnv: {key: proxyServiceAnnotationsEnv, optional: true},
 	}
 	// Read env vars
 	for _, env := range envs {
@@ -53,19 +55,32 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 	}
 
 	opt := manager.Options{
-		Namespace:            namespace,
-		AuthURL:              envs[authURLEnv].value,
-		Realm:                envs[realmEnv].value,
-		ClientID:             envs[clientIDEnv].value,
-		ClientSecret:         envs[clientSecretEnv].value,
-		ProxyImage:           envs[proxyImageEnv].value,
-		ProxyServiceType:     "LoadBalancer",
+		Namespace:               namespace,
+		AuthURL:                 envs[authURLEnv].value,
+		Realm:                   envs[realmEnv].value,
+		ClientID:                envs[clientIDEnv].value,
+		ClientSecret:            envs[clientSecretEnv].value,
+		ProxyImage:              envs[proxyImageEnv].value,
+		ProxyServiceType:        "LoadBalancer",
+		ProxyServiceAnnotations: make(map[string]string),
 		ProxyExternalAddress: "",
 		ProtocolFilter:       "",
 		ProxyName:            "http-proxy", // TODO: Fix this default, e.g. iofogctl tests get svc name
 		RouterAddress:        envs[routerAddressEnv].value,
 		Config:               cfg,
 	}
+	
+    // Set proxyServiceAnnotations if present
+    if annotations := envs[proxyServiceAnnotationsEnv].value; annotations != "" {
+        var annotationsMap map[string]string
+        err := json.Unmarshal([]byte(annotations), &annotationsMap)
+        if err != nil {
+            log.Error(err, "Failed to unmarshal proxy service annotations")
+            os.Exit(1)
+        }
+        opt.ProxyServiceAnnotations = annotationsMap
+    }
+
 	opts = append(opts, opt)
 	if envs[httpProxyAddressEnv].value != "" && envs[tcpProxyAddressEnv].value != "" {
 		// Update first opt

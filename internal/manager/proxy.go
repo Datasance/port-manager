@@ -82,15 +82,16 @@ func getRouterConfig(routerHost string) string { // nolint:unused,deadcode
 	return strings.Replace(config, "<ROUTER>", routerHost, 1)
 }
 
-func newProxyService(namespace, name string, ports portMap, svcType string) *corev1.Service {
+func newProxyService(namespace, name string, ports portMap, svcType string, serviceAnnotations map[string]string) *corev1.Service {
 	labels := map[string]string{
 		"name": name,
 	}
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels:    labels,
+			Name:        name,
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: serviceAnnotations,
 		},
 		Spec: corev1.ServiceSpec{
 			Type:                  corev1.ServiceType(svcType),

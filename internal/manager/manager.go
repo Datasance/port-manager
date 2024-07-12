@@ -51,18 +51,19 @@ type Manager struct {
 }
 
 type Options struct {
-	Namespace            string
-	AuthURL              string
-	Realm                string
-	ClientID             string
-	ClientSecret         string
-	ProxyImage           string
-	ProxyName            string
-	ProxyServiceType     string
-	ProtocolFilter       string
-	ProxyExternalAddress string
-	RouterAddress        string
-	Config               *rest.Config
+	Namespace               string
+	AuthURL                 string
+	Realm                   string
+	ClientID                string
+	ClientSecret            string
+	ProxyImage              string
+	ProxyName               string
+	ProxyServiceType        string
+	ProxyServiceAnnotations map[string]string
+	ProtocolFilter          string
+	ProxyExternalAddress    string
+	RouterAddress           string
+	Config                  *rest.Config
 }
 
 func (mgr *Manager) loginIofogClient(ioClient *ioclient.Client) error {
@@ -449,7 +450,7 @@ func (mgr *Manager) updateProxy() error {
 			return err
 		}
 		// Create new service if ports exist
-		svc := newProxyService(mgr.opt.Namespace, mgr.opt.ProxyName, mgr.cache, mgr.opt.ProxyServiceType)
+		svc := newProxyService(mgr.opt.Namespace, mgr.opt.ProxyName, mgr.cache, mgr.opt.ProxyServiceType, mgr.opt.ProxyServiceAnnotations)
 		mgr.setOwnerReference(svc)
 		if err := mgr.k8sClient.Create(context.TODO(), svc); err != nil {
 			return err
