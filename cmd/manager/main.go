@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"os"
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
