@@ -183,7 +183,7 @@ func (mgr *Manager) init() (err error) {
 			"credential": 10,
 		},
 	})
- 
+
 	baseURLStr := fmt.Sprintf("%v://%s.%s:%d/api/v1", mgr.opt.ControllerScheme, pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
 	baseURL, err := url.Parse(baseURLStr)
 	if err != nil {
