@@ -24,6 +24,7 @@ const (
 	tcpProxyAddressEnv         = "TCP_PROXY_ADDRESS"
 	routerAddressEnv           = "ROUTER_ADDRESS"
 	proxyServiceAnnotationsEnv = "PROXY_SERVICE_ANNOTATIONS"
+	controllerSchemeEnv        = "CONTROLLER_SCHEME"
 )
 
 type env struct {
@@ -43,6 +44,7 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		httpProxyAddressEnv:        {key: httpProxyAddressEnv, optional: true},
 		tcpProxyAddressEnv:         {key: tcpProxyAddressEnv, optional: true},
 		proxyServiceAnnotationsEnv: {key: proxyServiceAnnotationsEnv, optional: true},
+		controllerSchemeEnv:        {key: controllerSchemeEnv},
 	}
 	// Read env vars
 	for _, env := range envs {
@@ -68,6 +70,7 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		ProtocolFilter:          "",
 		ProxyName:               "http-proxy", // TODO: Fix this default, e.g. iofogctl tests get svc name
 		RouterAddress:           envs[routerAddressEnv].value,
+		ControllerScheme:        envs[controllerSchemeEnv].value,
 		Config:                  cfg,
 	}
 

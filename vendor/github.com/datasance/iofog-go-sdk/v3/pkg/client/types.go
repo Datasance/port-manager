@@ -1,6 +1,6 @@
 /*
  *  *******************************************************************************
- *  * Copyright (c) 2019 Edgeworx, Inc.
+ *  * Copyright (c) 2024 Datasance Teknoloji A.S.
  *  *
  *  * This program and the accompanying materials are made available under the
  *  * terms of the Eclipse Public License v. 2.0 which is available at
@@ -247,6 +247,10 @@ type MicroserviceInfo struct {
 	Config            string                          `json:"config"`
 	Name              string                          `json:"name"`
 	RootHostAccess    bool                            `json:"rootHostAccess"`
+	Runtime           string                          `json:"runtime,omitempty"`
+	Platform          string                          `json:"platform,omitempty"`
+	RunAsUser         string                          `json:"runAsUser,omitempty"`
+	CdiDevices        []string                        `json:"cdiDevices,omitempty"`
 	LogSize           int                             `json:"logSize"`
 	Delete            bool                            `json:"delete"`
 	DeleteWithCleanup bool                            `json:"deleteWithCleanup"`
@@ -298,17 +302,17 @@ type PublicPort struct {
 // Users
 
 type User struct {
-	Name     		string `json:"firstName"`
-	Surname  		string `json:"lastName"`
-	Email    		string `json:"email"`
-	Password 		string `json:"password"`
+	Name            string `json:"firstName"`
+	Surname         string `json:"lastName"`
+	Email           string `json:"email"`
+	Password        string `json:"password"`
 	SubscriptionKey string `json:"subscriptionKey"`
 }
 
 type UserResponse struct {
-	Name     		string `json:"firstName"`
-	Surname  		string `json:"lastName"`
-	Email    		string `json:"email"`
+	Name            string `json:"firstName"`
+	Surname         string `json:"lastName"`
+	Email           string `json:"email"`
 	SubscriptionKey string `json:"subscriptionKey"`
 }
 
