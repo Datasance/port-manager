@@ -1,6 +1,6 @@
 /*
  *  *******************************************************************************
- *  * Copyright (c) 2019 Edgeworx, Inc.
+ *  * Copyright (c) 2024 Datasance Teknoloji A.S.
  *  *
  *  * This program and the accompanying materials are made available under the
  *  * terms of the Eclipse Public License v. 2.0 which is available at
@@ -83,7 +83,7 @@ func NewAndLogin(opt Options, email, password string) (clt *Client, err error) {
 
 func RefreshUserSubscriptionKey(opt Options, email, password string) (clt *Client, err error, userResponse string) {
 	clt = New(opt)
-	err, userSubscriptionKey := clt.RefreshUserSubscriptionKeyCtl(LoginRequest{Email: email, Password: password});
+	err, userSubscriptionKey := clt.RefreshUserSubscriptionKeyCtl(LoginRequest{Email: email, Password: password})
 	if err != nil {
 		return clt, err, ""
 	}
@@ -167,7 +167,7 @@ func (clt *Client) doRequestWithHeaders(method, requestPath string, request inte
 	default:
 		return nil, fmt.Errorf("failed to parse request URL %s", requestPath)
 	}
-	
+
 	// Set auth header
 	headers["Authorization"] = "Bearer " + clt.accessToken
 
