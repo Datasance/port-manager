@@ -34,10 +34,39 @@ func getProxyContainerArgs(config string) []string {
 		config,
 	}
 }
-func newProxyDeployment(namespace, name, image string, replicas int32, config, routerHost string) *appsv1.Deployment {
+
+func newProxyDeployment(namespace, name, image string, imagePullSecret string, replicas int32, config, routerHost string) *appsv1.Deployment {
 	labels := map[string]string{
 		"name": name,
 	}
+
+	// Create a PodSpec with the necessary fields
+	podSpec := corev1.PodSpec{
+		Containers: []corev1.Container{
+			{
+				Name:            "proxy",
+				Image:           image,
+				Args:            getProxyContainerArgs(config),
+				ImagePullPolicy: corev1.PullAlways,
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ICPROXY_BRIDGE_HOST",
+						Value: routerHost,
+					},
+				},
+			},
+		},
+	}
+
+	// If imagePullSecret is provided, add it to the ImagePullSecrets field
+	if imagePullSecret != "" {
+		podSpec.ImagePullSecrets = []corev1.LocalObjectReference{
+			{
+				Name: imagePullSecret,
+			},
+		}
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -53,22 +82,7 @@ func newProxyDeployment(namespace, name, image string, replicas int32, config, r
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:            "proxy",
-							Image:           image,
-							Args:            getProxyContainerArgs(config),
-							ImagePullPolicy: corev1.PullAlways,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "ICPROXY_BRIDGE_HOST",
-									Value: routerHost,
-								},
-							},
-						},
-					},
-				},
+				Spec: podSpec,
 			},
 		},
 	}

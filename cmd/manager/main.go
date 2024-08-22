@@ -20,6 +20,7 @@ const (
 	clientIDEnv                = "KC_CLIENT"
 	clientSecretEnv            = "KC_CLIENT_SECRET"
 	proxyImageEnv              = "PROXY_IMAGE"
+	imagePullSecretEnv         = "PULL_SECRET_NAME"
 	httpProxyAddressEnv        = "HTTP_PROXY_ADDRESS"
 	tcpProxyAddressEnv         = "TCP_PROXY_ADDRESS"
 	routerAddressEnv           = "ROUTER_ADDRESS"
@@ -41,6 +42,7 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		clientSecretEnv:            {key: clientSecretEnv},
 		routerAddressEnv:           {key: routerAddressEnv},
 		proxyImageEnv:              {key: proxyImageEnv},
+		imagePullSecretEnv:         {key: imagePullSecretEnv, optional: true},
 		httpProxyAddressEnv:        {key: httpProxyAddressEnv, optional: true},
 		tcpProxyAddressEnv:         {key: tcpProxyAddressEnv, optional: true},
 		proxyServiceAnnotationsEnv: {key: proxyServiceAnnotationsEnv, optional: true},
@@ -64,6 +66,7 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		ClientID:                envs[clientIDEnv].value,
 		ClientSecret:            envs[clientSecretEnv].value,
 		ProxyImage:              envs[proxyImageEnv].value,
+		ImagePullSecret:         envs[imagePullSecretEnv].value,
 		ProxyServiceType:        "LoadBalancer",
 		ProxyServiceAnnotations: make(map[string]string),
 		ProxyExternalAddress:    "",
