@@ -35,7 +35,7 @@ func getProxyContainerArgs(config string) []string {
 	}
 }
 
-func newProxyDeployment(namespace, name, image string, imagePullSecret string, replicas int32, config, routerHost string) *appsv1.Deployment {
+func newProxyDeployment(namespace, name, image, imagePullSecret string, replicas int32, config, routerHost string) *appsv1.Deployment {
 	labels := map[string]string{
 		"name": name,
 	}
