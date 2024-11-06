@@ -58,7 +58,7 @@ func New(opt Options) *Client {
 		client.baseURL.Path = "http"
 	}
 	if client.baseURL.Path == "" {
-		client.baseURL.Path = "api/v1"
+		client.baseURL.Path = "api/v3"
 	}
 	// Get Controller version
 	if status, err := client.GetStatus(); err == nil {

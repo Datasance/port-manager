@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine as backend
+FROM golang:1.19-alpine AS backend
 
 WORKDIR /port-manager
 
@@ -16,7 +16,7 @@ RUN cp ./bin/port-manager /bin
 
 FROM alpine:3.19
 COPY --from=backend /bin /bin
-LABEL org.opencontainers.image.description Port-Manager
+LABEL org.opencontainers.image.description=Port-Manager
 LABEL org.opencontainers.image.source=https://github.com/datasance/port-manager
 LABEL org.opencontainers.image.licenses=EPL2.0
 ENTRYPOINT ["/bin/port-manager"]

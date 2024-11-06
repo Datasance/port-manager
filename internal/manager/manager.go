@@ -185,7 +185,7 @@ func (mgr *Manager) init() (err error) {
 		},
 	})
 
-	baseURLStr := fmt.Sprintf("%v://%s.%s:%d/api/v1", mgr.opt.ControllerScheme, pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
+	baseURLStr := fmt.Sprintf("%v://%s.%s:%d/api/v3", mgr.opt.ControllerScheme, pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
 	baseURL, err := url.Parse(baseURLStr)
 	if err != nil {
 		return fmt.Errorf("could not parse Controller URL %s: %s", baseURLStr, err.Error())
@@ -241,7 +241,7 @@ func (mgr *Manager) Run() {
 		if err := mgr.run(); err != nil {
 			mgr.log.Info(err.Error(), "Failed in watch loop")
 
-			baseURLStr := fmt.Sprintf("%v://%s.%s:%d/api/v1", mgr.opt.ControllerScheme, pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
+			baseURLStr := fmt.Sprintf("%v://%s.%s:%d/api/v3", mgr.opt.ControllerScheme, pkg.controllerServiceName, mgr.opt.Namespace, pkg.controllerPort)
 			baseURL, err := url.Parse(baseURLStr)
 			if err != nil {
 				mgr.log.Error(err, "Could not parse Controller URL")
