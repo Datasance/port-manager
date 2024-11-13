@@ -14,7 +14,7 @@ RUN apk add --update --no-cache bash curl git make
 RUN make build
 RUN cp ./bin/port-manager /bin
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1730489338
 WORKDIR /
 
 RUN microdnf install shadow-utils && \
