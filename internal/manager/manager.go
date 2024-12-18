@@ -61,6 +61,8 @@ type Options struct {
 	ProxyName               string
 	ProxyServiceType        string
 	ProxyServiceAnnotations map[string]string
+	RouterServerName        string
+	RouterTransport         string
 	ProtocolFilter          string
 	ProxyExternalAddress    string
 	RouterAddress           string
@@ -433,7 +435,7 @@ func (mgr *Manager) updateProxy() error {
 			return err
 		}
 		// Create new deployment
-		dep := newProxyDeployment(mgr.opt.Namespace, mgr.opt.ProxyName, mgr.opt.ProxyImage, mgr.opt.ImagePullSecret, 1, createProxyConfig(mgr.cache), mgr.opt.RouterAddress)
+		dep := newProxyDeployment(mgr.opt.Namespace, mgr.opt.ProxyName, mgr.opt.ProxyImage, mgr.opt.ImagePullSecret, 1, createProxyConfig(mgr.cache), mgr.opt.RouterAddress, mgr.opt.RouterServerName, mgr.opt.RouterTransport)
 		mgr.setOwnerReference(dep)
 		if err := mgr.k8sClient.Create(context.TODO(), dep); err != nil {
 			return err

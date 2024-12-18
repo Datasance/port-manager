@@ -25,6 +25,8 @@ const (
 	tcpProxyAddressEnv         = "TCP_PROXY_ADDRESS"
 	routerAddressEnv           = "ROUTER_ADDRESS"
 	proxyServiceAnnotationsEnv = "PROXY_SERVICE_ANNOTATIONS"
+	routerServerNameEnv        = "ROUTER_SERVERNAME"
+	routerTransportEnv         = "ROUTER_TRANSPORT"
 	controllerSchemeEnv        = "CONTROLLER_SCHEME"
 )
 
@@ -46,6 +48,8 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		httpProxyAddressEnv:        {key: httpProxyAddressEnv, optional: true},
 		tcpProxyAddressEnv:         {key: tcpProxyAddressEnv, optional: true},
 		proxyServiceAnnotationsEnv: {key: proxyServiceAnnotationsEnv, optional: true},
+		routerServerNameEnv:        {key: routerServerNameEnv, optional: true},
+		routerTransportEnv:         {key: routerTransportEnv, optional: true},
 		controllerSchemeEnv:        {key: controllerSchemeEnv},
 	}
 	// Read env vars
@@ -74,7 +78,19 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		ProxyName:               "http-proxy", // TODO: Fix this default, e.g. iofogctl tests get svc name
 		RouterAddress:           envs[routerAddressEnv].value,
 		ControllerScheme:        envs[controllerSchemeEnv].value,
+		RouterServerName:        "",
+		RouterTransport:         "",
 		Config:                  cfg,
+	}
+
+	// Set routerServerName if present
+	if envs[routerServerNameEnv].value != "" {
+		opt.RouterServerName = envs[routerServerNameEnv].value
+	}
+
+	// Set routerTransport if present
+	if envs[routerTransportEnv].value != "" {
+		opt.RouterTransport = envs[routerTransportEnv].value
 	}
 
 	// Set proxyServiceAnnotations if present

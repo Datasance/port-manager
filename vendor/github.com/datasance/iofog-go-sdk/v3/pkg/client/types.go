@@ -307,6 +307,8 @@ type User struct {
 	Email           string `json:"email"`
 	Password        string `json:"password"`
 	SubscriptionKey string `json:"subscriptionKey"`
+	AccessToken     string `json:"accessToken"`
+	RefreshToken    string `json:"refreshToken"`
 }
 
 type UserResponse struct {
@@ -333,13 +335,22 @@ type LoginRequest struct {
 	Totp     string `json:"totp"`
 }
 
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+type WithTokenRequest struct {
+	AccessToken string `json:"accessToken"`
+}
+
 type UpdateUserPasswordRequest struct {
 	OldPassword string `json:"oldPassword"`
 	NewPassword string `json:"newPassword"`
 }
 
 type LoginResponse struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 type ListAgentsRequest struct {

@@ -14,8 +14,11 @@
 package client
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
 )
 
 // create user can be removed!!
@@ -29,59 +32,70 @@ func (clt *Client) CreateUser(request User) error {
 }
 
 func (clt *Client) Login(request LoginRequest) (err error) {
-	// Send request
+	// Prompt for OTP if not already set
+	if request.Totp == "" {
+		fmt.Println("Enter OTP: \n")
+		reader := bufio.NewReader(os.Stdin)
+		otp, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("failed to read OTP: %v", err)
+		}
+		request.Totp = strings.TrimSpace(otp)
+	}
+
+	// Send login request
 	body, err := clt.doRequest("POST", "/user/login", request)
 	if err != nil {
-		return
+		return fmt.Errorf("failed to login: %v", err)
 	}
 
-	// Read access token from response
+	// Parse response
 	var response LoginResponse
-	if err = json.Unmarshal(body, &response); err != nil {
-		return
+	if err := json.Unmarshal(body, &response); err != nil {
+		return fmt.Errorf("failed to parse login response: %v", err)
 	}
-	clt.accessToken = response.AccessToken
 
-	return
+	clt.accessToken = response.AccessToken
+	clt.refreshToken = response.RefreshToken
+
+	return nil
 }
 
-func (clt *Client) RefreshUserSubscriptionKeyCtl(request LoginRequest) (err error, userSubscriptionKey string) {
-	// Send request
-	bodyLogin, errLogin := clt.doRequest("POST", "/user/login", request)
-	if errLogin != nil {
-		return errLogin, ""
+func (clt *Client) Refresh(request RefreshTokenRequest) (err error) {
+	// Send refresh request
+	body, err := clt.doRequest("POST", "/user/refresh", request)
+	if err != nil {
+		return fmt.Errorf("failed to refresh token: %v", err)
 	}
-
-	// Read access token from response
 	var response LoginResponse
-	errLoginMarshal := json.Unmarshal(bodyLogin, &response)
-	if errLoginMarshal != nil {
-		return errLoginMarshal, ""
+	if err := json.Unmarshal(body, &response); err != nil {
+		return fmt.Errorf("failed to parse refresh response: %v", err)
 	}
 
-	clt.SetAccessToken(response.AccessToken)
+	clt.accessToken = response.AccessToken
+	clt.refreshToken = response.RefreshToken
+
+	return nil
+}
+
+func (clt *Client) Profile(request WithTokenRequest) (err error, userResponse UserResponse) {
+	clt.SetAccessToken(request.AccessToken)
 
 	headers := map[string]string{
 		"Authorization": clt.GetAccessToken(),
 		"Content-Type":  "application/json",
 	}
 
-	emptyBody := bytes.NewBuffer([]byte{})
-
-	bodyGetUser, errGetUser := clt.doRequestWithHeaders("GET", "/user/profile", emptyBody, headers)
-
-	if errGetUser != nil {
-		return errGetUser, ""
+	bodyGetUser, err := clt.doRequestWithHeaders("GET", "/user/profile", nil, headers)
+	if err != nil {
+		return fmt.Errorf("failed to fetch user profile: %v", err), UserResponse{}
 	}
 
-	var userResponse UserResponse
-	errGetUserMarshal := json.Unmarshal(bodyGetUser, &userResponse)
-	if errGetUserMarshal != nil {
-		return errGetUserMarshal, ""
+	if err := json.Unmarshal(bodyGetUser, &userResponse); err != nil {
+		return fmt.Errorf("failed to parse user profile: %v", err), UserResponse{}
 	}
 
-	return nil, userResponse.SubscriptionKey
-
+	return nil, userResponse
 }
 
 func (clt *Client) UpdateUserPassword(request UpdateUserPasswordRequest) (err error) {

@@ -35,7 +35,7 @@ func getProxyContainerArgs(config string) []string {
 	}
 }
 
-func newProxyDeployment(namespace, name, image, imagePullSecret string, replicas int32, config, routerHost string) *appsv1.Deployment {
+func newProxyDeployment(namespace, name, image, imagePullSecret string, replicas int32, config, routerHost, serverName, transport string) *appsv1.Deployment {
 	labels := map[string]string{
 		"name": name,
 	}
@@ -56,6 +56,20 @@ func newProxyDeployment(namespace, name, image, imagePullSecret string, replicas
 				},
 			},
 		},
+	}
+
+	// Check if serverName and transport are provided, and add corresponding EnvVars
+	if serverName != "" && transport != "" {
+		podSpec.Containers[0].Env = append(podSpec.Containers[0].Env,
+			corev1.EnvVar{
+				Name:  "SERVERNAME",
+				Value: serverName,
+			},
+			corev1.EnvVar{
+				Name:  "TRANSPORT",
+				Value: transport,
+			},
+		)
 	}
 
 	// If imagePullSecret is provided, add it to the ImagePullSecrets field

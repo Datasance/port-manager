@@ -28,11 +28,12 @@ type controllerStatus struct {
 }
 
 type Client struct {
-	baseURL     *url.URL
-	accessToken string
-	retries     Retries
-	status      controllerStatus
-	timeout     int
+	baseURL      *url.URL
+	accessToken  string
+	refreshToken string
+	retries      Retries
+	status       controllerStatus
+	timeout      int
 }
 
 type Options struct {
@@ -78,21 +79,50 @@ func NewAndLogin(opt Options, email, password string) (clt *Client, err error) {
 	if err = clt.Login(LoginRequest{Email: email, Password: password}); err != nil {
 		return
 	}
-	return
+	return clt, nil
 }
 
-func RefreshUserSubscriptionKey(opt Options, email, password string) (clt *Client, err error, userResponse string) {
+func SessionLogin(opt Options, token, email, password string) (clt *Client, err error) {
 	clt = New(opt)
-	err, userSubscriptionKey := clt.RefreshUserSubscriptionKeyCtl(LoginRequest{Email: email, Password: password})
-	if err != nil {
-		return clt, err, ""
+
+	// Attempt to login using the refresh token
+	if err = clt.Refresh(RefreshTokenRequest{RefreshToken: token}); err != nil {
+		// If session login fails, fall back to normal login with email and password
+		clt, err = NewAndLogin(opt, email, password)
+		if err != nil {
+			return nil, fmt.Errorf("fallback login failed: %v", err)
+		}
 	}
-	return clt, nil, userSubscriptionKey
+
+	return clt, nil
+}
+
+func RefreshUserSubscriptionKey(opt Options, refreshToken, email, password string) (clt *Client, subscriptionKey string, err error) {
+	// Attempt session login using the refresh token
+	clt, err = SessionLogin(opt, refreshToken, email, password)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to login: %v", err)
+	}
+
+	// Get the access token and fetch user profile
+	accessToken := clt.GetAccessToken()
+	err, userResponse := clt.Profile(WithTokenRequest{AccessToken: accessToken})
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to fetch profile: %v", err)
+	}
+
+	return clt, userResponse.SubscriptionKey, nil
 }
 
 func NewWithToken(opt Options, token string) (clt *Client, err error) {
 	clt = New(opt)
 	clt.SetAccessToken(token)
+	return
+}
+
+func NewWithRefreshToken(opt Options, refreshToken string) (clt *Client, err error) {
+	clt = New(opt)
+	clt.SetAccessToken(refreshToken)
 	return
 }
 
@@ -114,6 +144,14 @@ func (clt *Client) GetAccessToken() string {
 
 func (clt *Client) SetAccessToken(token string) {
 	clt.accessToken = token
+}
+
+func (clt *Client) GetRefreshToken() string {
+	return clt.refreshToken
+}
+
+func (clt *Client) SetRefreshToken(token string) {
+	clt.refreshToken = token
 }
 
 func (clt *Client) doRequestWithRetries(currentRetries Retries, method, requestURL string, headers map[string]string, request interface{}) ([]byte, error) {
