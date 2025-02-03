@@ -1,6 +1,6 @@
 module github.com/datasance/port-manager/v3
 
-go 1.17
+go 1.23.0
 
 require (
 	github.com/datasance/iofog-go-sdk/v3 v3.4.16

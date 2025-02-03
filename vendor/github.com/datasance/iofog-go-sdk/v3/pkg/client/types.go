@@ -268,6 +268,8 @@ type MicroserviceInfo struct {
 	ExtraHosts        []MicroserviceExtraHost         `json:"extraHosts"`
 	Status            MicroserviceStatusInfo          `json:"status"`
 	Images            []CatalogImage                  `json:"images"`
+	PubTags      	  []string                        `json:"pubTags"`
+	SubTags           []string 					      `json:"subTags"`
 }
 
 type MicroserviceExtraHost struct {
@@ -436,13 +438,21 @@ type AgentInfo struct {
 }
 
 type RouterConfig struct {
-	RouterMode      *string `json:"routerMode,omitempty" yaml:"routerMode,omitempty"`
-	MessagingPort   *int    `json:"messagingPort,omitempty" yaml:"messagingPort,omitempty"`
-	EdgeRouterPort  *int    `json:"edgeRouterPort,omitempty" yaml:"edgeRouterPort,omitempty"`
-	InterRouterPort *int    `json:"interRouterPort,omitempty" yaml:"interRouterPort,omitempty"`
+	RouterMode       *string `json:"routerMode,omitempty" yaml:"routerMode,omitempty"`
+	MessagingPort    *int    `json:"messagingPort,omitempty" yaml:"messagingPort,omitempty"`
+	EdgeRouterPort   *int    `json:"edgeRouterPort,omitempty" yaml:"edgeRouterPort,omitempty"`
+	InterRouterPort  *int    `json:"interRouterPort,omitempty" yaml:"interRouterPort,omitempty"`
+	SslProfile       *string `json:"sslProfile,omitempty" yaml:"sslProfile,omitempty"`
+	SaslMechanisms   *string `json:"saslMechanisms,omitempty" yaml:"saslMechanisms,omitempty"`
+	CaCert      	 *string `json:"caCert,omitempty" yaml:"caCert,omitempty"`
+	TlsCert     	 *string `json:"tlsCert,omitempty" yaml:"tlsCert,omitempty"`
+	TlsKey      	 *string `json:"tlsKey,omitempty" yaml:"tlsKey,omitempty"`
+	RequireSsl       *string `json:"requireSsl,omitempty" yaml:"requireSsl,omitempty"`
+	AuthenticatePeer *string `json:"authenticatePeer,omitempty" yaml:"authenticatePeer,omitempty"`
 }
 
 type AgentConfiguration struct {
+	NetworkInterface          string    `json:"networkInterface" yaml:"networkInterface"`
 	DockerURL                 *string   `json:"dockerUrl,omitempty" yaml:"dockerUrl"`
 	DiskLimit                 *int64    `json:"diskLimit,omitempty" yaml:"diskLimit"`
 	DiskDirectory             *string   `json:"diskDirectory,omitempty" yaml:"diskDirectory"`
@@ -518,13 +528,10 @@ type RouteListResponse struct {
 	Routes []Route `json:"routes"`
 }
 
-// Route still has deprecated Dest/SourceUUID for retro compatibility
-// Prefer From and To
+
 type Route struct {
 	Name                   string `json:"name"`
 	Application            string `json:"application"`
-	SourceMicroserviceUUID string `json:"sourceMicroserviceUuid,omitempty"`
-	DestMicroserviceUUID   string `json:"destMicroserviceUuid,omitempty"`
 	From                   string `json:"from"`
 	To                     string `json:"to"`
 }
