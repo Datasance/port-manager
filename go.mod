@@ -1,6 +1,6 @@
 module github.com/datasance/port-manager/v3
 
-go 1.23
+go 1.17
 
 
 require (
