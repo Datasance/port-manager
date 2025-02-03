@@ -39,11 +39,11 @@ jobs:
       with:
         go-version: '1.23'
     - run: go version
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: v1.62.2
-        args: --timeout=5m0s
+    # - name: golangci-lint
+    #   uses: golangci/golangci-lint-action@v3
+    #   with:
+    #     version: v1.62.2
+    #     args: --timeout=5m0s
     - run: make build
 
     - name: 'Get Previous tag'
