@@ -75,7 +75,7 @@ func generateManagerOptions(namespace string, cfg *rest.Config) (opts []manager.
 		ProxyServiceAnnotations: make(map[string]string),
 		ProxyExternalAddress:    "",
 		ProtocolFilter:          "",
-		ProxyName:               "http-proxy", // TODO: Fix this default, e.g. iofogctl tests get svc name
+		ProxyName:               "pot-proxy", // TODO: Fix this default, e.g. iofogctl tests get svc name
 		RouterAddress:           envs[routerAddressEnv].value,
 		ControllerScheme:        envs[controllerSchemeEnv].value,
 		RouterServerName:        "",
