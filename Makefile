@@ -16,7 +16,7 @@ endif
 
 GOFILES_NOVENDOR = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
-GO_SDK_MODULE = iofog-go-sdk/v3@v3.4.14
+GO_SDK_MODULE = iofog-go-sdk/v3@v3.4.16
 
 .PHONY: clean
 clean: ## Clean the working area and the project
@@ -63,7 +63,7 @@ ifeq (, $(shell which golangci-lint))
 	GOLANGCI_TMP_DIR=$$(mktemp -d) ;\
 	cd $$GOLANGCI_TMP_DIR ;\
 	go mod init tmp ;\
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.33.0 ;\
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2 ;\
 	rm -rf $$GOLANGCI_TMP_DIR ;\
 	}
 GOLANGCI_LINT=$(GOBIN)/golangci-lint
