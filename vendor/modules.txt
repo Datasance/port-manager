@@ -1,5 +1,5 @@
-# github.com/datasance/iofog-go-sdk/v3 v3.4.16
-## explicit; go 1.23.0
+# github.com/datasance/iofog-go-sdk/v3 v3.4.14
+## explicit; go 1.18
 github.com/datasance/iofog-go-sdk/v3/pkg/client
 github.com/datasance/iofog-go-sdk/v3/pkg/k8s
 # github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
